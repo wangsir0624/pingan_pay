@@ -2,6 +2,7 @@
 namespace Wangjian\PinganPay;
 
 use GuzzleHttp\Client as Guzzle;
+use Wangjian\PinganPay\OptionResolver\AbstractOptionResolver;
 use Wangjian\PinganPay\Util\Aes128EcbCrypt;
 
 /**
@@ -20,17 +21,33 @@ use Wangjian\PinganPay\Util\Aes128EcbCrypt;
  */
 class Client
 {
+    /**
+     * API host constants
+     * @const string
+     */
     const API_HOST = 'https://api.orangebank.com.cn/mct1/';
     const API_HOST_TEST = 'https://mixpayuat4.orangebank.com.cn/mct1/';
 
+    /**
+     * Order type constants
+     * @const int
+     */
     const ORDER_TYPE_TRADE = 1;
     const ORDER_TYPE_REFUND = 2;
 
+    /**
+     * Order status constants
+     * @const int
+     */
     const ORDER_STATUS_SUCCESS = 1;
     const ORDER_STATUS_PAYING = 2;
     const ORDER_STATUS_CANCELED = 4;
     const ORDER_STATUS_CONFIRMING = 9;
 
+    /**
+     * api methods
+     * @var array
+     */
     protected $apiMethods = [
         'getPayList' => 'paylist',
         'getOrderList' => 'order',
@@ -43,20 +60,48 @@ class Client
         'getOpenidByAuthCode' => 'authtoopenid'
     ];
 
+    /**
+     * @var array
+     */
     protected $urlSignWithPrivateKeys = ['paycancel', 'payrefund'];
 
+    /**
+     * @var string
+     */
     protected $openId;
 
+    /**
+     * @var string
+     */
     protected $openKey;
 
+    /**
+     * @var Guzzle
+     */
     protected $guzzle;
 
+    /**
+     * @var Aes128EcbCrypt
+     */
     protected $crypt;
 
+    /**
+     * cached option resolvers
+     * @var array
+     */
     protected $optionResolvers = [];
 
+    /**
+     * @var string
+     */
     protected $privateKey = null;
 
+    /**
+     * Client constructor.
+     * @param string $openId
+     * @param string $openKey
+     * @param bool $test
+     */
     public function __construct($openId, $openKey, $test = false)
     {
         $this->openId = $openId;
@@ -69,6 +114,11 @@ class Client
         $this->crypt = new Aes128EcbCrypt($this->openKey);
     }
 
+    /**
+     * set private key
+     * @param string $path  the private key file path
+     * @throws \InvalidArgumentException when the private key file does'n exist
+     */
     public function setPrivateKey($path)
     {
         if(!file_exists($path)) {
@@ -78,6 +128,14 @@ class Client
         $this->privateKey = file_get_contents($path);
     }
 
+    /**
+     * send a post request
+     * @param string $uri
+     * @param array $parameters
+     * @param array $headers
+     * @return array
+     * @throws \Exception
+     */
     public function post($uri, $parameters = [], $headers = [])
     {
         if(in_array($uri, $this->urlSignWithPrivateKeys)) {
@@ -107,6 +165,11 @@ class Client
         return $this->decodeData($data['data']);
     }
 
+    /**
+     * @param string $name
+     * @param array $arguments
+     * @return array|mixed
+     */
     public function __call($name, $arguments)
     {
         if(in_array($name, array_keys($this->apiMethods))) {
@@ -116,6 +179,12 @@ class Client
         throw new \BadMethodCallException("method $name does't exist");
     }
 
+    /**
+     * call api method
+     * @param string $name
+     * @param array $arguments
+     * @return array
+     */
     protected function callApiMethod($name, $arguments)
     {
         $beforeMethod = 'before' . ucfirst($name);
@@ -133,6 +202,11 @@ class Client
         return $result;
     }
 
+    /**
+     * create option resolver
+     * @param string $name
+     * @return AbstractOptionResolver
+     */
     protected function createOptionResolver($name)
     {
         $resolverName = ucfirst($name) . 'OptionResolver';
@@ -145,6 +219,10 @@ class Client
         return $this->optionResolvers[$resolverName];
     }
 
+    /**
+     * @param array $data
+     * @return array
+     */
     protected function prepareForRequest(array $data)
     {
         $newData = [];
@@ -159,6 +237,10 @@ class Client
         return $newData;
     }
 
+    /**
+     * @param array $data
+     * @return bool
+     */
     protected function verifyResponse($data)
     {
         $sign = $data['sign'];
@@ -167,16 +249,29 @@ class Client
         return $sign == $this->calculateSign($data);
     }
 
+    /**
+     * @param array $data
+     * @return string
+     */
     protected function encodeData(array $data)
     {
         return bin2hex($this->crypt->encrypt(json_encode($data)));
     }
 
+    /**
+     * @param string $cipher
+     * @return array
+     */
     protected function decodeData($cipher)
     {
         return json_decode($this->crypt->decrypt(hex2bin($cipher)), true);
     }
 
+    /**
+     * @param array $data
+     * @param string $type
+     * @return string
+     */
     protected function calculateSign($data, $type = 'common')
     {
         $data['open_key'] = $this->openKey;
