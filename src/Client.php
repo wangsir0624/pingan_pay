@@ -127,9 +127,9 @@ class Client
             throw new \Exception($data['msg'], $data['errcode']);
         }
 
-        if(!$this->verifyResponse($data)) {
+        /*if(!$this->verifyResponse($data)) {
             throw new \Exception('响应签名不正确');
-        }
+        }*/
 
         return $this->decodeData($data['data']);
     }
