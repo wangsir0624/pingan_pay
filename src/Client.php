@@ -27,6 +27,10 @@ class Client
 
     protected $optionResolvers = [];
 
+    protected $privateKey = null;
+
+    protected $urlSignWithPrivateKeys = ['paycancel'];
+
     public function __construct($openId, $openKey, $test = false)
     {
         $this->openId = $openId;
@@ -37,6 +41,15 @@ class Client
         ]);
 
         $this->crypt = new Aes128EcbCrypt($this->openKey);
+    }
+
+    public function setPrivateKey($path)
+    {
+        if(!file_exists($path)) {
+            throw new \InvalidArgumentException('the private key file does\'t exist');
+        }
+
+        $this->privateKey = file_get_contents($path);
     }
 
     public function getPayList($pmtType)
@@ -77,8 +90,28 @@ class Client
         return $this->post('paystatus', $options);
     }
 
+    public function cancelOrder(array $options)
+    {
+        $options = $this->createOptionResolver('cancelOrder')->resolve($options);
+        if(is_null($options['ord_no']) && is_null($options['out_no'])) {
+            throw new \InvalidArgumentException('the ord_no and out_no can\'t be empty at the same time');
+        }
+
+        return $this->post('paycancel', $options);
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
+        if(in_array($uri, $this->urlSignWithPrivateKeys)) {
+            if(empty($this->privateKey)) {
+                throw new \RuntimeException('the private key is not set yet');
+            }
+
+            if(empty($parameters['sign_type'])) {
+                $parameters['sign_type'] = 'RSA';
+            }
+        }
+
         $response = $this->guzzle->post($uri, [
             'form_params' => $this->prepareForRequest($parameters),
             'headers' => $headers
@@ -114,7 +147,10 @@ class Client
         $newData['open_id'] = $this->openId;
         $newData['timestamp'] = time();
         $newData['data'] = $this->encodeData($data);
-        $newData['sign'] = $this->calculateSign($newData);
+        if(!empty($data['sign_type'])) {
+            $newData['sign_type'] = $data['sign_type'];
+        }
+        $newData['sign'] = $this->calculateSign($newData, empty($data['sign_type']) ? 'common' : $data['sign_type']);
 
         return $newData;
     }
@@ -137,11 +173,22 @@ class Client
         return json_decode($this->crypt->decrypt(hex2bin($cipher)), true);
     }
 
-    protected function calculateSign($data)
+    protected function calculateSign($data, $type = 'common')
     {
         $data['open_key'] = $this->openKey;
         ksort($data);
-        $sign = md5(sha1(http_build_query($data)));
+        switch ($type) {
+            case 'RSA':
+                openssl_sign(http_build_query($data), $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA1);
+                $sign = bin2hex($sign);
+                break;
+            case 'RSA2':
+                openssl_sign(http_build_query($data), $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA256);
+                $sign = bin2hex($sign);
+                break;
+            default:
+                $sign = md5(sha1(http_build_query($data)));
+        }
         unset($data['open_key']);
 
         return $sign;
