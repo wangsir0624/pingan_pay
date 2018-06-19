@@ -29,7 +29,7 @@ class Client
 
     protected $privateKey = null;
 
-    protected $urlSignWithPrivateKeys = ['paycancel'];
+    protected $urlSignWithPrivateKeys = ['paycancel', 'payrefund'];
 
     public function __construct($openId, $openKey, $test = false)
     {
@@ -103,6 +103,11 @@ class Client
     public function refund(array $options)
     {
         return $this->post('payrefund', $this->createOptionResolver('refund')->resolve($options));
+    }
+
+    public function getBills(array $options = [])
+    {
+        return $this->post('bill/downloadbill', $this->createOptionResolver('getBills')->resolve($options));
     }
 
     public function post($uri, $parameters = [], $headers = [])
