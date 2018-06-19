@@ -4,6 +4,20 @@ namespace Wangjian\PinganPay;
 use GuzzleHttp\Client as Guzzle;
 use Wangjian\PinganPay\Util\Aes128EcbCrypt;
 
+/**
+ * Class Client
+ * @package Wangjian\PinganPay
+ *
+ * @method array getPayList(array $options)
+ * @method array getOrderList(array $options = [])
+ * @method array charge(array $options)
+ * @method array getOrderInfo(array $options)
+ * @method array getOrderStatus(array $options)
+ * @method array cancelOrder(array $options)
+ * @method array refund(array $options)
+ * @method array getBills(array $options = [])
+ * @method array getOpenidByAuthCode(array $options)
+ */
 class Client
 {
     const API_HOST = 'https://api.orangebank.com.cn/mct1/';
@@ -17,6 +31,20 @@ class Client
     const ORDER_STATUS_CANCELED = 4;
     const ORDER_STATUS_CONFIRMING = 9;
 
+    protected $apiMethods = [
+        'getPayList' => 'paylist',
+        'getOrderList' => 'order',
+        'charge' => 'payorder',
+        'getOrderInfo' => 'order/view',
+        'getOrderStatus' => 'paystatus',
+        'cancelOrder' => 'paycancel',
+        'refund' => 'payrefund',
+        'getBills' => 'bill/downloadbill',
+        'getOpenidByAuthCode' => 'authtoopenid'
+    ];
+
+    protected $urlSignWithPrivateKeys = ['paycancel', 'payrefund'];
+
     protected $openId;
 
     protected $openKey;
@@ -28,8 +56,6 @@ class Client
     protected $optionResolvers = [];
 
     protected $privateKey = null;
-
-    protected $urlSignWithPrivateKeys = ['paycancel', 'payrefund'];
 
     public function __construct($openId, $openKey, $test = false)
     {
@@ -50,69 +76,6 @@ class Client
         }
 
         $this->privateKey = file_get_contents($path);
-    }
-
-    public function getPayList($pmtType)
-    {
-        if(is_array($pmtType)) {
-            $pmtType = implode(',', $pmtType);
-        }
-
-        return $this->post('paylist', [
-            'pmt_type' => $pmtType
-        ]);
-    }
-
-    public function getOrderList(array $options = [])
-    {
-        return $this->post('order', $this->createOptionResolver('getOrderList')->resolve($options));
-    }
-
-    public function charge(array $options)
-    {
-        return $this->post('payorder', $this->createOptionResolver('charge')->resolve($options));
-    }
-
-    public function getOrderInfo($outNo)
-    {
-        return $this->post('order/view', [
-            'out_no' => $outNo
-        ]);
-    }
-
-    public function getOrderStatus(array $options)
-    {
-        $options = $this->createOptionResolver('getOrderStatus')->resolve($options);
-        if(is_null($options['ord_no']) && is_null($options['out_no'])) {
-            throw new \InvalidArgumentException('the ord_no and out_no can\'t be empty at the same time');
-        }
-
-        return $this->post('paystatus', $options);
-    }
-
-    public function cancelOrder(array $options)
-    {
-        $options = $this->createOptionResolver('cancelOrder')->resolve($options);
-        if(is_null($options['ord_no']) && is_null($options['out_no'])) {
-            throw new \InvalidArgumentException('the ord_no and out_no can\'t be empty at the same time');
-        }
-
-        return $this->post('paycancel', $options);
-    }
-
-    public function refund(array $options)
-    {
-        return $this->post('payrefund', $this->createOptionResolver('refund')->resolve($options));
-    }
-
-    public function getBills(array $options = [])
-    {
-        return $this->post('bill/downloadbill', $this->createOptionResolver('getBills')->resolve($options));
-    }
-
-    public function getOpenidByAuthCode(array $options)
-    {
-        return $this->post('authtoopenid', $this->createOptionResolver('getOpenidByAuthCode')->resolve($options));
     }
 
     public function post($uri, $parameters = [], $headers = [])
@@ -142,6 +105,31 @@ class Client
         }*/
 
         return $this->decodeData($data['data']);
+    }
+
+    public function __call($name, $arguments)
+    {
+        if(in_array($name, array_keys($this->apiMethods))) {
+            return $this->callApiMethod($name, $arguments);
+        }
+
+        throw new \BadMethodCallException("method $name does't exist");
+    }
+
+    protected function callApiMethod($name, $arguments)
+    {
+        $beforeMethod = 'before' . ucfirst($name);
+        $afterMethod = 'after' . ucfirst($name);
+
+        if(method_exists($this, $beforeMethod)) {
+            call_user_func_array([$this, $beforeMethod], $arguments);
+        }
+        $result = $this->post($this->apiMethods[$name], $this->createOptionResolver($name)->resolve(isset($arguments[0]) ? $arguments[0] : []));
+        if(method_exists($this, $afterMethod)) {
+            call_user_func_array([$this, $afterMethod], $arguments);
+        }
+
+        return $result;
     }
 
     protected function createOptionResolver($name)
