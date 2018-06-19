@@ -100,6 +100,11 @@ class Client
         return $this->post('paycancel', $options);
     }
 
+    public function refund(array $options)
+    {
+        return $this->post('payrefund', $this->createOptionResolver('refund')->resolve($options));
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
         if(in_array($uri, $this->urlSignWithPrivateKeys)) {
