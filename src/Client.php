@@ -120,13 +120,14 @@ class Client
     {
         $beforeMethod = 'before' . ucfirst($name);
         $afterMethod = 'after' . ucfirst($name);
+        $options = isset($arguments[0]) ? $arguments[0] : [];
 
         if(method_exists($this, $beforeMethod)) {
             call_user_func_array([$this, $beforeMethod], $arguments);
         }
-        $result = $this->post($this->apiMethods[$name], $this->createOptionResolver($name)->resolve(isset($arguments[0]) ? $arguments[0] : []));
+        $result = $this->post($this->apiMethods[$name], $this->createOptionResolver($name)->resolve($options));
         if(method_exists($this, $afterMethod)) {
-            call_user_func_array([$this, $afterMethod], $arguments);
+            $result = call_user_func_array([$this, $afterMethod], array_merge([$result], $arguments));
         }
 
         return $result;
@@ -195,5 +196,19 @@ class Client
         unset($data['open_key']);
 
         return $sign;
+    }
+
+    protected function beforeGetOrderStatus(array $options)
+    {
+        if(empty($options['ord_no']) && empty($options['out_no'])) {
+            throw new \InvalidArgumentException('the ord_no and out_no parameter can\'t be empty at the same time');
+        }
+    }
+
+    protected function beforeCancelOrder(array $options)
+    {
+        if(empty($options['ord_no']) && empty($options['out_no'])) {
+            throw new \InvalidArgumentException('the ord_no and out_no parameter can\'t be empty at the same time');
+        }
     }
 }
