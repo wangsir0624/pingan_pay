@@ -9,6 +9,14 @@ class Client
     const API_HOST = 'https://api.orangebank.com.cn/mct1/';
     const API_HOST_TEST = 'https://mixpayuat4.orangebank.com.cn/mct1/';
 
+    const ORDER_TYPE_TRADE = 1;
+    const ORDER_TYPE_REFUND = 2;
+
+    const ORDER_STATUS_SUCCESS = 1;
+    const ORDER_STATUS_PAYING = 2;
+    const ORDER_STATUS_CANCELED = 4;
+    const ORDER_STATUS_CONFIRMING = 9;
+
     protected $openId;
 
     protected $openKey;
@@ -16,6 +24,8 @@ class Client
     protected $guzzle;
 
     protected $crypt;
+
+    protected $optionResolvers = [];
 
     public function __construct($openId, $openKey, $test = false)
     {
@@ -40,6 +50,11 @@ class Client
         ]);
     }
 
+    public function getOrderList(array $options)
+    {
+        return $this->post('order', $this->createOptionResolver('getOrderList')->resolve($options));
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
         $response = $this->guzzle->post($uri, [
@@ -57,6 +72,18 @@ class Client
         }
 
         return $this->decodeData($data['data']);
+    }
+
+    protected function createOptionResolver($name)
+    {
+        $resolverName = ucfirst($name) . 'OptionResolver';
+
+        if(!isset($this->optionResolvers[$resolverName])) {
+            $className = "\\Wangjian\\PinganPay\\OptionResolver\\$resolverName";
+            $this->optionResolvers[$resolverName] = new $className();
+        }
+
+        return $this->optionResolvers[$resolverName];
     }
 
     protected function prepareForRequest(array $data)
