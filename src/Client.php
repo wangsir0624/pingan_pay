@@ -110,6 +110,11 @@ class Client
         return $this->post('bill/downloadbill', $this->createOptionResolver('getBills')->resolve($options));
     }
 
+    public function getOpenidByAuthCode(array $options)
+    {
+        return $this->post('authtoopenid', $this->createOptionResolver('getOpenidByAuthCode')->resolve($options));
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
         if(in_array($uri, $this->urlSignWithPrivateKeys)) {
