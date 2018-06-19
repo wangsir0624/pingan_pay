@@ -55,6 +55,13 @@ class Client
         return $this->post('order', $this->createOptionResolver('getOrderList')->resolve($options));
     }
 
+    public function getOrderInfo($outNo)
+    {
+        return $this->post('order/view', [
+            'out_no' => $outNo
+        ]);
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
         $response = $this->guzzle->post($uri, [
