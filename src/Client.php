@@ -50,9 +50,14 @@ class Client
         ]);
     }
 
-    public function getOrderList(array $options)
+    public function getOrderList(array $options = [])
     {
         return $this->post('order', $this->createOptionResolver('getOrderList')->resolve($options));
+    }
+
+    public function charge(array $options)
+    {
+        return $this->post('payorder', $this->createOptionResolver('charge')->resolve($options));
     }
 
     public function getOrderInfo($outNo)
