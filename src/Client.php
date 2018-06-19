@@ -62,6 +62,16 @@ class Client
         ]);
     }
 
+    public function getOrderStatus(array $options)
+    {
+        $options = $this->createOptionResolver('getOrderStatus')->resolve($options);
+        if(is_null($options['ord_no']) && is_null($options['out_no'])) {
+            throw new \InvalidArgumentException('the ord_no and out_no can\'t be empty at the same time');
+        }
+
+        return $this->post('paystatus', $options);
+    }
+
     public function post($uri, $parameters = [], $headers = [])
     {
         $response = $this->guzzle->post($uri, [
