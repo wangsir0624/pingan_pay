@@ -55,6 +55,13 @@ class Client
     const ORDER_STATUS_CONFIRMING = 9;
 
     /**
+     * notify status constants
+     * @const int
+     */
+    const NOTIFY_STATUS_PAID = 1;
+    const NOTIFY_STATUS_CANCELED = 4;
+
+    /**
      * api methods
      * @var array
      */
@@ -108,6 +115,11 @@ class Client
     protected $privateKey = null;
 
     /**
+     * @var NotifyHandler
+     */
+    protected $notifyHandler;
+
+    /**
      * Client constructor.
      * @param string $openId
      * @param string $openKey
@@ -123,6 +135,8 @@ class Client
         ]);
 
         $this->crypt = new Aes128EcbCrypt($this->openKey);
+
+        $this->notifyHandler = new NotifyHandler();
     }
 
     /**
@@ -137,6 +151,15 @@ class Client
         }
 
         $this->privateKey = file_get_contents($path);
+
+        return $this;
+    }
+
+    public function setNotifyHandler(NotifyHandler $handler)
+    {
+        $this->notifyHandler = $handler;
+
+        return $this;
     }
 
     /**
@@ -188,6 +211,57 @@ class Client
         }
 
         throw new \BadMethodCallException("method $name does't exist");
+    }
+
+    /**
+     * handle the notify
+     * @param array|null $data
+     * @return string return the notify handle result
+     * @throws \Exception
+     */
+    public function notify(array $data = null)
+    {
+        if(is_null($data)) {
+            $data = $_POST;
+        }
+
+        if(!$this->verifyResponse($data)) {
+            throw new \Exception('回调参数签名不正确');
+        }
+
+        try {
+            switch($data['status']) {
+                case static::NOTIFY_STATUS_CANCELED:
+                    $result = $this->notifyHandler->handleCanceled($data);
+                    break;
+                default:
+                    $result = $this->notifyHandler->handlePaid($data);
+            }
+
+            if($result === false) {
+                throw new \RuntimeException('notify failed');
+            }
+
+            return $this->success();
+        } catch (\Exception $e) {
+            return $this->failed();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function success()
+    {
+        return 'notify_success';
+    }
+
+    /**
+     * @return string
+     */
+    public function failed()
+    {
+        return 'notify_failed';
     }
 
     /**
