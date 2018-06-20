@@ -18,6 +18,7 @@ use Wangjian\PinganPay\Util\Aes128EcbCrypt;
  * @method array refund(array $options)
  * @method array getBills(array $options = [])
  * @method array getOpenidByAuthCode(array $options)
+ * @method array getRefundInfo(array $options)
  */
 class Client
 {
@@ -65,6 +66,7 @@ class Client
         'getOrderStatus' => 'paystatus',
         'cancelOrder' => 'paycancel',
         'refund' => 'payrefund',
+        'getRefundInfo' => 'payrefundquery',
         'getBills' => 'bill/downloadbill',
         'getOpenidByAuthCode' => 'authtoopenid'
     ];
@@ -313,6 +315,13 @@ class Client
     {
         if(empty($options['ord_no']) && empty($options['out_no'])) {
             throw new \InvalidArgumentException('the ord_no and out_no parameter can\'t be empty at the same time');
+        }
+    }
+
+    protected function beforeGetRefundInfo(array $options)
+    {
+        if(empty($options['refund_out_no']) && empty($options['refund_ord_no'])) {
+            throw new \InvalidArgumentException('the refund_out_no and refund_ord_no parameter can\'t be empty at the same time');
         }
     }
 }
