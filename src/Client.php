@@ -28,6 +28,10 @@ class Client
     const API_HOST = 'https://api.orangebank.com.cn/mct1/';
     const API_HOST_TEST = 'https://mixpayuat4.orangebank.com.cn/mct1/';
 
+    /**
+     * payment type constants
+     * @const int
+     */
     const PMT_TYPE_SCANNING = 2;
     const PMT_TYPE_SCANNED = 3;
     const PMT_TYPE_JSAPI = 4;

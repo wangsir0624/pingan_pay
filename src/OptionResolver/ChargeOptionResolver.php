@@ -14,7 +14,14 @@ class ChargeOptionResolver extends AbstractOptionResolver
             'trade_no' => null,
             'remark' => null,
             'tag' => null,
-            'notify_url' => null
+            'notify_url' => null,
+            'sub_appid' => null,
+            'trade_type' => null,
+            'spbill_create_ip' => null,
+            'scene_info' => null,
+            'sub_openid' => null,
+            'goods_tag' => null,
+            'limit_pay' => null
         ]);
 
         $this->resolver->setRequired([
@@ -37,6 +44,13 @@ class ChargeOptionResolver extends AbstractOptionResolver
         $this->resolver->setAllowedTypes('remark', ['string', 'null']);
         $this->resolver->setAllowedTypes('tag', ['string', 'null']);
         $this->resolver->setAllowedTypes('notify_url', ['string', 'null']);
+        $this->resolver->setAllowedTypes('sub_appid', ['string', 'null']);
+        $this->resolver->setAllowedTypes('trade_type', ['string', 'null']);
+        $this->resolver->setAllowedTypes('spbill_create_ip', ['string', 'null']);
+        $this->resolver->setAllowedTypes('scene_info', ['string', 'null']);
+        $this->resolver->setAllowedTypes('sub_openid', ['string', 'null']);
+        $this->resolver->setAllowedTypes('goods_tag', ['string', 'null']);
+        $this->resolver->setAllowedTypes('limit_pay', ['string', 'null']);
 
         $this->resolver->setAllowedValues('original_amount', function($value) {
             return $value > 0;
@@ -53,5 +67,6 @@ class ChargeOptionResolver extends AbstractOptionResolver
         $this->resolver->setAllowedValues('notify_url', function($value) {
             return is_null($value) || preg_match('/^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?$/', $value);
         });
+        $this->resolver->setAllowedValues('trade_type', ['APP', 'MWEB', 'JSAPI', null]);
     }
 }
