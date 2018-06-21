@@ -65,7 +65,7 @@ class ChargeOptionResolver extends AbstractOptionResolver
             return $value > 0;
         });
         $this->resolver->setAllowedValues('notify_url', function($value) {
-            return is_null($value) || preg_match('/^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?$/', $value);
+            return is_null($value) || preg_match('/^https?:\/\/[^\s]+$/', $value);
         });
         $this->resolver->setAllowedValues('trade_type', ['APP', 'MWEB', 'JSAPI', null]);
     }
