@@ -28,7 +28,7 @@ class RefundOptionResolver extends AbstractOptionResolver
         $this->resolver->setAllowedTypes('out_no', 'string');
         $this->resolver->setAllowedTypes('refund_out_no', 'string');
         $this->resolver->setAllowedTypes('refund_ord_name', ['string', 'null']);
-        $this->resolver->setAllowedTypes('refund_amount', 'int');
+        $this->resolver->setAllowedTypes('refund_amount', ['int', 'string']);
         $this->resolver->setAllowedTypes('trade_account', ['string', 'null']);
         $this->resolver->setAllowedTypes('trade_no', ['string', 'null']);
         $this->resolver->setAllowedTypes('trade_result', ['string', 'null']);

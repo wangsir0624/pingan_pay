@@ -18,14 +18,14 @@ class GetOrderListOptionResolver extends AbstractOptionResolver
             'edate' => null
         ]);
 
-        $this->resolver->setAllowedTypes('page', ['int', 'null']);
-        $this->resolver->setAllowedTypes('pagesize', ['int', 'null']);
+        $this->resolver->setAllowedTypes('page', ['int', 'string', 'null']);
+        $this->resolver->setAllowedTypes('pagesize', ['int', 'string', 'null']);
         $this->resolver->setAllowedTypes('out_no', ['string', 'null']);
         $this->resolver->setAllowedTypes('trade_no', ['string', 'null']);
         $this->resolver->setAllowedTypes('ord_no', ['string', 'null']);
         $this->resolver->setAllowedTypes('pmt_tag', ['string', 'null']);
-        $this->resolver->setAllowedTypes('ord_type', ['int', 'null']);
-        $this->resolver->setAllowedTypes('status', ['int', 'null']);
+        $this->resolver->setAllowedTypes('ord_type', ['int', 'string', 'null']);
+        $this->resolver->setAllowedTypes('status', ['int', 'string', 'null']);
         $this->resolver->setAllowedTypes('sdate', ['string', 'null']);
         $this->resolver->setAllowedTypes('edate', ['string', 'null']);
 

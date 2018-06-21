@@ -35,10 +35,10 @@ class ChargeOptionResolver extends AbstractOptionResolver
         $this->resolver->setAllowedTypes('pmt_tag', 'string');
         $this->resolver->setAllowedTypes('pmt_name', ['string', 'null']);
         $this->resolver->setAllowedTypes('ord_name', ['string', 'null']);
-        $this->resolver->setAllowedTypes('original_amount', 'int');
-        $this->resolver->setAllowedTypes('discount_amount', ['int', 'null']);
-        $this->resolver->setAllowedTypes('ignore_amount', ['int', 'null']);
-        $this->resolver->setAllowedTypes('trade_amount', 'int');
+        $this->resolver->setAllowedTypes('original_amount', ['int', 'string']);
+        $this->resolver->setAllowedTypes('discount_amount', ['int', 'string', 'null']);
+        $this->resolver->setAllowedTypes('ignore_amount', ['int', 'string', 'null']);
+        $this->resolver->setAllowedTypes('trade_amount', ['int', 'string']);
         $this->resolver->setAllowedTypes('trade_account', ['string', 'null']);
         $this->resolver->setAllowedTypes('trade_no', ['string', 'null']);
         $this->resolver->setAllowedTypes('remark', ['string', 'null']);
