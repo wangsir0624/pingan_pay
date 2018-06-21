@@ -2,6 +2,7 @@
 namespace Wangjian\PinganPay;
 
 use GuzzleHttp\Client as Guzzle;
+use phpseclib\Crypt\AES;
 use Wangjian\PinganPay\OptionResolver\AbstractOptionResolver;
 use Wangjian\PinganPay\Util\Aes128EcbCrypt;
 
@@ -99,7 +100,7 @@ class Client
     protected $guzzle;
 
     /**
-     * @var Aes128EcbCrypt
+     * @var AES
      */
     protected $crypt;
 
@@ -134,7 +135,8 @@ class Client
             'verify' => false
         ]);
 
-        $this->crypt = new Aes128EcbCrypt($this->openKey);
+        $this->crypt = new AES(AES::MODE_ECB);
+        $this->crypt->setKey($this->openKey);
 
         $this->notifyHandler = new NotifyHandler();
     }
