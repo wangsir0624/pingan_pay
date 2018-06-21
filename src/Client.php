@@ -192,9 +192,9 @@ class Client
             throw new \Exception($data['msg'], $data['errcode']);
         }
 
-        /*if(!$this->verifyResponse($data)) {
+        if(!$this->verifyResponse($data)) {
             throw new \Exception('响应签名不正确');
-        }*/
+        }
 
         return $this->decodeData($data['data']);
     }
@@ -326,7 +326,7 @@ class Client
      * @param array $data
      * @return bool
      */
-    protected function verifyResponse($data)
+    public function verifyResponse($data)
     {
         $sign = $data['sign'];
         unset($data['sign']);
@@ -361,17 +361,23 @@ class Client
     {
         $data['open_key'] = $this->openKey;
         ksort($data);
+        $tmpData = [];
+        foreach ($data as $key => $value) {
+            $tmpData[] = "$key=$value";
+        }
+        $dataStr = implode('&', $tmpData);
+
         switch ($type) {
             case 'RSA':
-                openssl_sign(http_build_query($data), $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA1);
+                openssl_sign($dataStr, $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA1);
                 $sign = bin2hex($sign);
                 break;
             case 'RSA2':
-                openssl_sign(http_build_query($data), $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA256);
+                openssl_sign($dataStr, $sign, openssl_get_privatekey($this->privateKey), OPENSSL_ALGO_SHA256);
                 $sign = bin2hex($sign);
                 break;
             default:
-                $sign = md5(sha1(http_build_query($data)));
+                $sign = md5(sha1($dataStr));
         }
         unset($data['open_key']);
 
