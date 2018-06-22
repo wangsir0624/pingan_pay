@@ -132,7 +132,6 @@ class Client
         $this->openKey = $openKey;
         $this->guzzle = new Guzzle([
             'base_uri' => $test ? static::API_HOST_TEST : static::API_HOST,
-            'verify' => false
         ]);
 
         $this->crypt = new AES(AES::MODE_ECB);
