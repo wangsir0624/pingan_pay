@@ -142,16 +142,16 @@ class Client
 
     /**
      * set private key
-     * @param string $path  the private key file path
+     * @param string $priviateKey  the private key file path or contnets
      * @throws \InvalidArgumentException when the private key file does'n exist
      */
-    public function setPrivateKey($path)
+    public function setPrivateKey($privateKey)
     {
-        if(!file_exists($path)) {
-            throw new \InvalidArgumentException('the private key file does\'t exist');
+        if (is_file($privateKey)) {
+            $this->privateKey = file_get_contents($privateKey);
+        } else {
+            $this->privateKey = $privateKey;
         }
-
-        $this->privateKey = file_get_contents($path);
 
         return $this;
     }
